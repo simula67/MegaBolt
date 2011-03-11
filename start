@@ -1,0 +1,6 @@
+#!/bin/sh
+./clean
+qmake -project
+echo "QT += network">>MegaBolt.pro
+qmake MegaBolt.pro
+make

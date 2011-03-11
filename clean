@@ -1,0 +1,4 @@
+#!/bin/bash
+r
+rm -f timing_file down_file thread_file 2>/dev/null
+rm -f test.o project Makefile MegaBolt.pro 2>/dev/null

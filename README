@@ -1,0 +1,7 @@
+This is an attempt to create a Portable Download Manager for Linux, Windows etc. The project is written in Qt C++ and attempts to have the following project goals :
+
+* Portability : Run on all possible platforms like Windows, Linux, Mac etc
+* Usable : User friendly interface
+* Feature rich : Competitive with established Download Managers like IDM and support for large number of protocols and features
+
+etc.
