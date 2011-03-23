@@ -4,7 +4,9 @@
 #include <QUrl>
 #include <QNetworkProxy>
 #include <QFileInfo>
+#include <QThread>
 #define EOPEN -1
+#define UNKNOWN -2
 
 enum ThreadState {IDLE,WORKING,BLOCK};
 
@@ -15,7 +17,7 @@ public:
   int abs_end;
   int abs_pos;
 };
-class Download :public QObject{
+class Download :public QThread{
 private:
   QNetworkProxy *mega_proxy;
 public:
