@@ -1,0 +1,4 @@
+#!/bin/bash
+qmake -project
+qmake test_code.pro
+make

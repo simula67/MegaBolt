@@ -150,6 +150,39 @@ Download::Download(QUrl down_url,int down_id,QFileInfo down_file,QDateTime down_
   thread_status->flush();
   sleep(5);
 }
+void HttpDownThread::run() {
+  while(nextJob != DONE) {
+    switch(nextJob) {
+    case INIT:// Create Socket, send request and receive and throw away headers
+      ready = 1;
+      nextjob = SUSPEND;
+      break;
+    case DOWNLOAD:// Download the stuff onto the buffer. use "bytes_downloaded". 
+      break;
+    case SUSPEND:
+      break;
+    case IDLE:
+      ready = 0;
+    case DONE:
+      break;
+    default:
+      qDebug() << "ThreadSignal could not be deciphered";
+    }
+  }
+}
+void Download::getHttp()
+{
+  /* Create the threads, initialize the URL and ranges by hand.
+     Now, set the nextJob to INIT. Once all threads have ready == 1 emit start_download()
+     Every 300ms, emit suspend_download() and  
+     save all the buffers to disk. If any thread downloaded past its abs_end, discard the extra data. Make bytes_downloaded of each thread 0
+     If any thread finished downloading, find longest undivided block and re-arrage the ranges
+     
+
+     Update the thread abs_pos and write out thread_file
+  */
+
+}
 /*
 Test
 */
