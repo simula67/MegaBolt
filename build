@@ -2,5 +2,6 @@
 ./clean
 qmake -project
 echo "QT += network">>MegaBolt.pro
+echo "CONFIG += thread">>MegaBolt.pro
 qmake MegaBolt.pro
 make

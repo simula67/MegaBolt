@@ -1,4 +1,10 @@
 #!/bin/bash
-r
+rm *~ 2>/dev/null
+rm *# 2>/dev/null
+for i in `ls -a|grep '~'`
+do
+    rm $i
+done
+make clean
 rm -f timing_file down_file thread_file 2>/dev/null
-rm -f test.o project Makefile MegaBolt.pro 2>/dev/null
+rm -f Makefile errfile MegaBolt MegaBolt.pro 2>/dev/null
