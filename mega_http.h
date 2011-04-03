@@ -27,6 +27,10 @@ public:
   int abs_start;
   int abs_end;
   int abs_pos;
+  ThreadStatus(){
+    abs_start=abs_end=abs_pos=0;
+
+}
 };
 class HttpDownload : public QThread{
   Q_OBJECT

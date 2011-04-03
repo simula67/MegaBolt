@@ -197,12 +197,12 @@ void HttpDownload::getHttp()
       }
       else
 	to_write = worker[i].bytes_received;
-      threads[i].abs_pos += to_write;
+
       if( !dest_file->seek(threads[i].abs_pos) ) {
 	qDebug()<<"Cant seek!!!";
 	exit(1);
       }  
-     
+      threads[i].abs_pos += to_write;     
       int written=0;
       /* Repeatedly write to file */
       while( (written += dest_file->write( (worker[i].buffer) + written,(to_write - written) )) < to_write );
