@@ -211,12 +211,20 @@ void HttpDownload::getHttp()
 	qDebug() << "All bytes written";
       }
       else {
-	qDebug() << "Could not write. This is usually pretty bad";
+	qDebug() << "Could not write. This is sometimes pretty bad";
       }
       bytes_download += to_write;
       worker[i].bytes_received = 0;
     }
-    /* Now take the DONE threads and reposition the range_start and range end and put it in INIT state */
+    /* Now take the DONE threads and reposition the range_start and range end and put it in INIT state 
+    
+    (a) First look for one DONE thread.
+    (b) If foound look throughout the "threads" array to find a (abs_end - abs_pos) > MIN_SPLIT_LEN
+    (c) Now make range_start of DONE thread to be (abs_end - abs_pos)/2 and range_end be abs_end of unfinished thread
+    (d) Similarly make changes for unfinished thread.
+    (e) Change abs_start and abs_end in "threads" array for finished and unfinished thread
+   
+    */
     thread_status->write((char *)threads,num_threads * sizeof(ThreadStatus));
 
   }
