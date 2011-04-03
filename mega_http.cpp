@@ -231,6 +231,8 @@ void HttpDownload::getHttp()
       threads[i].abs_pos += to_write;
       /* We are just change the abs_pos to abs_start so that we just have to write and delete on pause */
       threads[i].abs_start = threads[i].abs_pos;
+      qDebug() << "To write "<<to_write<<" bytes";
+      qDebug() << "Absolute start changed to "<<threads[i].abs_pos;
     }
     
     /* Now take the DONE threads and reposition the range_start and range end and put it in INIT state 
