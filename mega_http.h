@@ -27,12 +27,17 @@ public:
   int abs_start;
   int abs_end;
   int abs_pos;
+  ThreadStatus() {
+  abs_start=abs_end=abs_pos=0;
+  }
 };
+
 class HttpDownload : public QThread{
   Q_OBJECT
 private:
   QNetworkProxy *mega_proxy;
-public:
+
+ public:
   QUrl dl_url;
   int id;
   QFile *dest_file;
@@ -48,10 +53,13 @@ public:
   int bytes_download;
   QFile *thread_status;
 
+  int paused;
+
   ThreadStatus *threads;
   QFile *timing_info;
   HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTime down_start,QDateTime down_end,QString down_type,int down_threads,QUrl down_proxy,QString down_uname, QString down_passwd,QFileInfo down_threadfile,QFileInfo down_timing);
  void getHttp();
+ void pause();
  signals:
  void start_download();
  void suspend_download();

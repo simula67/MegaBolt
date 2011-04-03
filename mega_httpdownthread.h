@@ -10,7 +10,7 @@
 
 #define QT_BUG_SLEEP 2
 
-enum ThreadSignal {INIT,DOWNLOAD,SUSPEND,DONE};
+enum ThreadSignal {INIT,DOWNLOAD,SUSPEND,DONE,PAUSE};
 
 class HttpDownThread : public QThread {
   Q_OBJECT
@@ -20,7 +20,7 @@ class HttpDownThread : public QThread {
   void suspend_download();
  public:
   void run();
-  int ready,suspended;
+  int ready,suspended,paused;
   int bytes_received;
   ThreadSignal nextJob;
   char buffer[BUFFSIZE];
@@ -31,8 +31,8 @@ class HttpDownThread : public QThread {
     ready = 0;
     nextJob = SUSPEND;
     bytes_received = 0;
-    }
+    paused = 0;
+  }
   QNetworkProxy *mega_proxy;
 };
-
 #endif

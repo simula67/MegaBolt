@@ -5,7 +5,7 @@ void HttpDownThread::run() {
   QString *response_string = new QString("");
   QString request_string = "GET "; 
   QAbstractSocket *get_request = new QAbstractSocket(QAbstractSocket::TcpSocket,0);
-  while(nextJob != DONE) {
+  while( (nextJob != DONE) && (nextJob != PAUSE) ) {
     switch(nextJob) {
     case INIT:
       /* Create Socket, send request, receive and throw away headers */
@@ -84,12 +84,18 @@ void HttpDownThread::run() {
       suspended = 1;
       break;
     case DONE:
-      suspended = 0;
+      
       break;
+    case PAUSE:
     default:
       qDebug() << "ThreadSignal could not be deciphered";
     }
   }
+  suspended = 0;
+  get_request->close();
+  delete get_request;
+  delete response_string;
+  paused = 1;
 }
 void HttpDownThread::start_download()
 {
