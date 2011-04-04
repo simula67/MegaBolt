@@ -1,14 +1,10 @@
 #include "mega_httpdownthread.h"
 
 void HttpDownThread::run() {
-  qDebug() <<  "This  thread will download from "<<range_start<<" to "<<range_end;
   QString *response_string = new QString("");
   QString request_string = "GET "; 
   QAbstractSocket *get_request = new QAbstractSocket(QAbstractSocket::TcpSocket,0);
   while( (nextJob != DONE) && (nextJob != PAUSE) ) {
-    if( nextJob == PAUSE ){
-      qDebug() << "I am paused. But I Am STILL RUNNING";
-    }
     switch(nextJob) {
     case INIT:
       /* Create Socket, send request, receive and throw away headers */
@@ -50,7 +46,7 @@ void HttpDownThread::run() {
 	}
 	else {
 	  //qDebug() << "Some bytes were not written. Error : ";
-	  qDebug() << get_request->errorString();
+	  //qDebug() << get_request->errorString();
 	  qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
 	  QThread::sleep(QT_BUG_SLEEP);
 	}

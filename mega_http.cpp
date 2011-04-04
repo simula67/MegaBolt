@@ -91,7 +91,6 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
 	
     if(head_response) {
       if( (head_response->value("Location") == "") || ( head_response->value("Location") == dl_url.toString() ) ) {
-	qDebug() << "Stop following";
 	follow = 0;
       }
       else {
@@ -108,8 +107,7 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
     qDebug() << "Head Response is NULL?!?!?";
     throw UNKNOWN;
   }
-  qDebug() << "Size is : ";
-  qDebug() <<head_response->value("Content-Length");
+  qDebug() << "Size is : "<<head_response->value("Content-Length");
   size = (head_response->value("Content-Length")).toInt();
   if(size == 0) {
     qDebug() << "Size not found. Cant download without knowing file size";
@@ -124,7 +122,6 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
   for(i=0;i<num_threads;i++) {
     threads[i].abs_start = threads[i].abs_pos = ( i * (size/num_threads) );
     threads[i].abs_end =  (i+1) * (size/num_threads);
-    qDebug()<< "Thread "<<i+1<<" has abs_start and abs_end as "<<threads[i].abs_start<<threads[i].abs_end;
   }
   threads[i-1].abs_end = size;
   bytes_download = 0;
