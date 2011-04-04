@@ -70,8 +70,8 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
 	  qDebug() << "All bytes written";
 	}
 	else {
-	  qDebug() << "Some bytes were not written. Error : ";
-	  qDebug() << head_request->errorString();
+	  //qDebug() << "Some bytes were not written. Error : ";
+	  //qDebug() << head_request->errorString();
 	  qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
 	  QThread::sleep(QT_BUG_SLEEP);
 	}
@@ -120,7 +120,6 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
   head_response = NULL;
   
   threads = new ThreadStatus[num_threads];
-//  memset(threads,0,num_threads*sizeof(ThreadStatus));
   int i;
   for(i=0;i<num_threads;i++) {
     threads[i].abs_start = threads[i].abs_pos = ( i * (size/num_threads) );
@@ -139,8 +138,9 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
 void HttpDownload::getHttp()
 {
   /* If already paused we are resuming */
-  if(paused == 1)
+  if(paused == 1) {
     paused = 0;
+  }
   /* 
      Create the threads, initialize the URL and ranges by hand.
      Connect the start_download signal of the "this" to start_download slot of each thread
@@ -160,13 +160,9 @@ void HttpDownload::getHttp()
   HttpDownThread *worker = new HttpDownThread[num_threads];
   int i,all_start;
   for(i=0;i<num_threads;i++) {
-    //    QString val;
-    //    int a;
     worker[i].down_url = dl_url;
     worker[i].range_start = threads[i].abs_start;
-    qDebug()<<"Worker["<<i<<"].threads["<<i<<"].abs_start="<<threads[i].abs_start<<endl;
     worker[i].range_end = threads[i].abs_end;
-    qDebug()<<"Worker["<<i<<"].threads["<<i<<"].abs_end="<<threads[i].abs_end<<endl;
     worker[i].mega_proxy = mega_proxy;
     worker[i].nextJob = INIT;
     QObject::connect(this,SIGNAL(start_download()),(&worker[i]),SLOT(start_download()));
@@ -185,10 +181,21 @@ void HttpDownload::getHttp()
     }
   }
   
-  qDebug() << "All threads intialized";
   /* Now start the download loop */
   while( (bytes_download < size) && (!paused) ) {
     emit start_download();
+    /*
+      After this the nextJob of each thread MUST be DOWNLOAD
+      Sometimes WIERDLY it does not happen.
+      This is a workaround to set it to DOWNLOAD
+
+    */
+    for(i=0;i<num_threads;i++) {
+      if( worker[i].nextJob != DOWNLOAD ) {
+	worker[i].nextJob = DOWNLOAD;
+      }
+    }
+    
     QThread::msleep(300);
     emit suspend_download();
     all_start = 0;
@@ -201,7 +208,6 @@ void HttpDownload::getHttp()
       }
     }
     /* All threads suspended. Save buffers to disk */
-    qDebug() << "All threads suspended";
     for( i = 0;i < num_threads; i++ ) {
       int to_write;
       if( threads[i].abs_pos + worker[i].bytes_received > threads[i].abs_end ) {
@@ -224,15 +230,14 @@ void HttpDownload::getHttp()
 	qDebug() << "All bytes written";
       }
       else {
-	qDebug() << "Could not write. This is sometimes pretty bad";
+	;
+	//qDebug() << "Could not write. This is sometimes pretty bad";
       }
       bytes_download += to_write;
       worker[i].bytes_received = 0;
       threads[i].abs_pos += to_write;
       /* We are just change the abs_pos to abs_start so that we just have to write and delete on pause */
       threads[i].abs_start = threads[i].abs_pos;
-      qDebug() << "To write "<<to_write<<" bytes";
-      qDebug() << "Absolute start changed to "<<threads[i].abs_pos;
     }
     
     /* Now take the DONE threads and reposition the range_start and range end and put it in INIT state 
@@ -246,29 +251,25 @@ void HttpDownload::getHttp()
     */
     thread_status->seek(0);
     thread_status->write((char *)threads,num_threads * sizeof(ThreadStatus));
+    qDebug() << "Downloaded "<<bytes_download<<" bytes";
   }
   if(paused) {
-    qDebug() << "getHttp pausing";
     int j,all_start=1;
     for(int j=0;j<num_threads;j++) {
       worker[j].nextJob = PAUSE;
     }
+    QThread::msleep(200);
     while(all_start) {
       all_start=0;
       for(j=0;j<num_threads;j++) {
 	if( worker[j].paused == 0 ) {
-	  //qDebug() << "Thread "<<j+1<<" not paused";
 	  all_start = 1;
 	}
       }
     }
-    qDebug() << "All threads paused";
     delete[] worker;
   }
-  qDebug() << "Returning from gethttp NOW";
 }    
 void HttpDownload::pause(void) {
-  qDebug() << "Pausing";
   paused = 1;
 }
-

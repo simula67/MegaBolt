@@ -17,7 +17,7 @@ public:
 void myThread::run()
 {
     down_obj->getHttp();
-    qDebug() << "Setting done bit NOW";
+    //qDebug() << "Setting done bit NOW";
     done = 1;
 }
 int main(int argc,char *argv[])
@@ -44,6 +44,7 @@ int main(int argc,char *argv[])
     
     delete download_thread;
     */
+    sleep(5);
     xilinx.getHttp();
   }
   catch(int e) {

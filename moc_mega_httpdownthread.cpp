@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mega_httpdownthread.h'
 **
-** Created: Sun Apr 3 19:48:42 2011
+** Created: Sun Apr 3 21:26:51 2011
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.2)
 **
 ** WARNING! All changes made in this file will be lost!

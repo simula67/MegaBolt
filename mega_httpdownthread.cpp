@@ -6,11 +6,15 @@ void HttpDownThread::run() {
   QString request_string = "GET "; 
   QAbstractSocket *get_request = new QAbstractSocket(QAbstractSocket::TcpSocket,0);
   while( (nextJob != DONE) && (nextJob != PAUSE) ) {
+    if( nextJob == PAUSE ){
+      qDebug() << "I am paused. But I Am STILL RUNNING";
+    }
     switch(nextJob) {
     case INIT:
       /* Create Socket, send request, receive and throw away headers */
       suspended = 0;
-      
+      ready=0;
+      paused=0;
       get_request->setProxy((*mega_proxy));
       
       if( down_url.path() == "" ) 
@@ -26,7 +30,6 @@ void HttpDownThread::run() {
       request_string.append(QString::number(range_end,10));
       
       request_string.append("\r\n\r\n");
-      qDebug() << "Request string : " << request_string;
       if( down_url.port() < 0 )
 	down_url.setPort(80);
       
@@ -46,7 +49,7 @@ void HttpDownThread::run() {
 	  qDebug() << "All bytes written";
 	}
 	else {
-	  qDebug() << "Some bytes were not written. Error : ";
+	  //qDebug() << "Some bytes were not written. Error : ";
 	  qDebug() << get_request->errorString();
 	  qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
 	  QThread::sleep(QT_BUG_SLEEP);
@@ -57,7 +60,7 @@ void HttpDownThread::run() {
 	  if( get_request->readLine(buffer,LINE_LEN) == 0 )
 	    break;
 	  response_string->append(buffer);
-	  qDebug() << "Discarding line : " << (*response_string);
+	  //qDebug() << "Discarding line : " << (*response_string);
 	  if( (*response_string) == "\r\n" ) {
 	    
 	    break;
@@ -70,6 +73,8 @@ void HttpDownThread::run() {
       break;
     case DOWNLOAD:
       suspended = 0;
+      paused=0;
+      ready=1;
       if( bytes_received > BUFFSIZE - DOWNLOAD_LEN ) {
 	nextJob = SUSPEND;
 	break;
@@ -77,16 +82,22 @@ void HttpDownThread::run() {
       /* Download the stuff onto the buffer. use "bytes_received". */
       int received;
       received = get_request->read(buffer + bytes_received,DOWNLOAD_LEN);
-      if( received > 0 )
+      if( received > 0 ) {
 	bytes_received += received;
+      }
       break;
     case SUSPEND:
+      ready=1;
       suspended = 1;
+      paused=0;
       break;
     case DONE:
-      
+      paused=suspended=ready=0;
       break;
     case PAUSE:
+      paused = 1;
+      suspended=0;
+      break;
     default:
       qDebug() << "ThreadSignal could not be deciphered";
     }
