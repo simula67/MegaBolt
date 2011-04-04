@@ -27,16 +27,9 @@ public:
   int abs_start;
   int abs_end;
   int abs_pos;
-<<<<<<< HEAD
   ThreadStatus(){
     abs_start=abs_end=abs_pos=0;
-
-}
-=======
-  ThreadStatus() {
-  abs_start=abs_end=abs_pos=0;
   }
->>>>>>> pause
 };
 
 class HttpDownload : public QThread{
