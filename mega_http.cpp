@@ -248,7 +248,7 @@ void HttpDownload::getHttp()
     */
     thread_status->seek(0);
     thread_status->write((char *)threads,num_threads * sizeof(ThreadStatus));
-    qDebug() << "Downloaded "<<bytes_download<<" bytes";
+    qDebug() << "Downloaded "<< (int)(((float)bytes_download/(float)size) * 100) <<"%";
   }
   if(paused) {
     int j,all_start=1;
