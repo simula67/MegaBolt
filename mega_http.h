@@ -8,10 +8,14 @@
 #include <QNetworkProxy>
 #include <QFileInfo>
 #include <QThread>
+#include <QHttpResponseHeader>
+#include "mega_common.h"
+#include "mega_httpmainthread.h"
 
 #define EOPEN -1
 #define UNKNOWN -2
 #define NOFILESIZE -3
+#define NOMEM -4
 
 #ifndef LINE_LEN
 #define LINE_LEN 1024
@@ -22,21 +26,12 @@
 #endif
 
 
-class ThreadStatus {
-public:
-  int abs_start;
-  int abs_end;
-  int abs_pos;
-  ThreadStatus(){
-    abs_start=abs_end=abs_pos=0;
-  }
-};
 
 class HttpDownload : public QThread{
   Q_OBJECT
 private:
   QNetworkProxy *mega_proxy;
-
+  HttpMainThread *mainThread;
  public:
   QUrl dl_url;
   int id;
@@ -53,15 +48,13 @@ private:
   int bytes_download;
   QFile *thread_status;
 
-  int paused;
-
   ThreadStatus *threads;
   QFile *timing_info;
   HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTime down_start,QDateTime down_end,QString down_type,int down_threads,QUrl down_proxy,QString down_uname, QString down_passwd,QFileInfo down_threadfile,QFileInfo down_timing);
  void getHttp();
+ //~HttpDownload();
  void pause();
- signals:
- void start_download();
- void suspend_download();
+protected:
+  QHttpResponseHeader *head_response;
 };
 #endif

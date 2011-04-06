@@ -14,13 +14,12 @@ enum ThreadSignal {INIT,DOWNLOAD,SUSPEND,DONE,PAUSE};
 
 class HttpDownThread : public QThread {
   Q_OBJECT
-    
-  private slots:
-  void start_download();
-  void suspend_download();
+ protected:
+   QString *response_string;
+   QAbstractSocket *get_request;
  public:
   void run();
-  int ready,suspended,paused;
+  int volatile ready,suspended,paused;
   int bytes_received;
   ThreadSignal nextJob;
   char buffer[BUFFSIZE];

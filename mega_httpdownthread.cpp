@@ -1,18 +1,24 @@
 #include "mega_httpdownthread.h"
 
 void HttpDownThread::run() {
-  QString *response_string = new QString("");
+  response_string = new QString("");
+  if( response_string == NULL ) {
+  	qDebug() << "Out of memory";
+  }
   QString request_string = "GET "; 
-  QAbstractSocket *get_request = new QAbstractSocket(QAbstractSocket::TcpSocket,0);
+  get_request = new QAbstractSocket(QAbstractSocket::TcpSocket,0);
+  if( get_request == NULL ) {
+  	qDebug() << "Could not open socket";
+  }
   while( (nextJob != DONE) && (nextJob != PAUSE) ) {
     switch(nextJob) {
     case INIT:
       /* Create Socket, send request, receive and throw away headers */
+      
       suspended = 0;
       ready=0;
       paused=0;
       get_request->setProxy((*mega_proxy));
-      
       if( down_url.path() == "" ) 
 	request_string.append("/");
       else
@@ -28,7 +34,6 @@ void HttpDownThread::run() {
       request_string.append("\r\n\r\n");
       if( down_url.port() < 0 )
 	down_url.setPort(80);
-      
       while(1) {
 	get_request->close();
 	get_request->connectToHost(down_url.host(), (quint16) down_url.port());
@@ -37,6 +42,7 @@ void HttpDownThread::run() {
 	  break;
 	}
       }
+      
       /* Send out request and wait */
       if(get_request->state() == QAbstractSocket::ConnectedState) {
 	get_request->write(request_string.toAscii());
@@ -57,12 +63,12 @@ void HttpDownThread::run() {
 	    break;
 	  response_string->append(buffer);
 	  //qDebug() << "Discarding line : " << (*response_string);
-	  if( (*response_string) == "\r\n" ) {
-	    
+	  if( (*response_string) == "\r\n" ) {  
 	    break;
 	 }
 	response_string->resize(0);
 	}
+	delete response_string;
 	nextJob = SUSPEND;
         ready = 1;
       }
@@ -101,14 +107,5 @@ void HttpDownThread::run() {
   suspended = 0;
   get_request->close();
   delete get_request;
-  delete response_string;
   paused = 1;
-}
-void HttpDownThread::start_download()
-{
-  nextJob = DOWNLOAD;
-}
-void HttpDownThread::suspend_download()
-{
-  nextJob = SUSPEND;
 }
