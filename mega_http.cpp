@@ -1,13 +1,27 @@
+/*
+ *
+ *  Copyright (C) 2011, Joji Antony
+ *  This file is part of MegaBolt.
+ *   MegaBolt is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   MegaBolt is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with MegaBolt.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "mega_http.h"
-#include "mega_httpmainthread.h"
-#include <QDebug>
-#include <QTcpSocket>
-#include <QApplication>
 
-HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTime down_start,QDateTime down_end,QString down_type,int down_threads,QUrl down_proxy,QString down_uname, QString down_passwd,QFileInfo down_threadfile,QFileInfo down_timing) {
+HttpDownload::HttpDownload(QUrl dl_url,int down_id,QFileInfo down_file,QDateTime down_start,QDateTime down_end,QString down_type,int down_threads,QUrl down_proxy,QString down_uname, QString down_passwd,QFileInfo down_threadfile,QFileInfo down_timing,int size) {
   QUrl no_value("");
-  dl_url = down_url;
-  id=down_id;
+  
+  this->dl_url = dl_url;
+  
   dest_file = new QFile(down_file.absoluteFilePath());
   if( dest_file == NULL ) {
   	throw NOMEM;
@@ -30,11 +44,9 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
   if(!timing_info->open(QIODevice::ReadWrite)) {   
     throw EOPEN;
   }
-  start_time=down_start;
-  end_time = down_end;
-  type = down_type;
-  num_threads = down_threads;
   
+  
+ 
   if( down_proxy != no_value ) {
     /* Add code for other type of proxies */
     mega_proxy = new QNetworkProxy(QNetworkProxy::HttpCachingProxy,down_proxy.host(),down_proxy.port(),uname,passwd);
@@ -49,91 +61,85 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
     }
     mega_proxy->setType(QNetworkProxy::NoProxy);
   }
-  uname = down_uname;
-  passwd = down_passwd;
-  
-  QAbstractSocket *head_request = new QAbstractSocket(QAbstractSocket::TcpSocket,this);
-  if( head_request == NULL ) {
-    throw NOMEM;
-  }
-  head_response = NULL;
-  head_request->setProxy((*mega_proxy));
-  QString response_string;  
-  int head_status = 0;
-  int follow = 1;
-  while(follow) {
-    do {
-      QString request_string = "HEAD ";
-      if( dl_url.path() == "" ) 
-	request_string.append("/");
-      else
-	request_string.append(dl_url.path());
-      request_string.append(" HTTP/1.1\r\nHost: ");
-      request_string.append(dl_url.host());
-      request_string.append("\r\n\r\n");
-      head_request->close();
-      if( dl_url.port() < 0 )
-	dl_url.setPort(80);
-      head_request->connectToHost(dl_url.host(), (quint16) dl_url.port());
-      if (head_request->waitForConnected(18000)) {
+  if( size == 0 ) {
+    QAbstractSocket *head_request = new QAbstractSocket(QAbstractSocket::TcpSocket,this);
+    if( head_request == NULL ) {
+      throw NOMEM;
+    }
+    head_response = NULL;
+    head_request->setProxy((*mega_proxy));
+    QString response_string;  
+    int head_status = 0;
+    int follow = 1;
+    while(follow) {
+      do {
+	QString request_string = "HEAD ";
+	if( dl_url.path() == "" ) 
+	  request_string.append("/");
+	else
+	  request_string.append(dl_url.path());
+	request_string.append(" HTTP/1.1\r\nHost: ");
+	request_string.append(dl_url.host());
+	request_string.append("\r\n\r\n");
+	head_request->close();
+	if( dl_url.port() < 0 )
+	  dl_url.setPort(80);
+	head_request->connectToHost(dl_url.host(), (quint16) dl_url.port());
+	if (head_request->waitForConnected(18000)) {
 	qDebug("Connected!");
-      }
-      char buff[LINE_LEN];
+	}
+	char buff[LINE_LEN];
+	
+	if( (head_request->state() == QAbstractSocket::ConnectedState) && (head_request->isValid()) ) {
+	  head_request->write(request_string.toAscii(),request_string.size());
+	  head_request->flush();
+	  if(head_request->waitForBytesWritten(-1)) {
+	    qDebug() << "All bytes written";
+	  }
+	  else {
+	    qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
+	    QThread::sleep(QT_BUG_SLEEP);
+	  }
+	  response_string.resize(0);
+	  while( head_request->readLine(buff,LINE_LEN) > 0 ) {
+	    response_string.append(buff);
+	  }
+	  head_response = new QHttpResponseHeader(response_string);
+	  if(head_response == NULL) {
+	    throw NOMEM;
+	  }
+	  head_status = head_response->statusCode();
+	  if( (head_status != 302) && (head_status != 200) ) {
+	    delete head_response;
+	    head_response = NULL;
+	  }
+	}
+      }while( (head_status != 302) && (head_status != 200) );
       
-      if(head_request->state() == QAbstractSocket::ConnectedState) {
-	head_request->write(request_string.toAscii());
-	head_request->flush();
-	if(head_request->waitForBytesWritten(-1)) {
-	  qDebug() << "All bytes written";
+      
+      if(head_response) {
+	if( (head_response->value("Location") == "") || ( head_response->value("Location") == dl_url.toString() ) ) {
+	  follow = 0;
+	  qDebug() << "Size is : "<<head_response->value("Content-Length");
+          size = (head_response->value("Content-Length")).toInt();
+          if(size == 0) {
+             qDebug() << "Size not found. Cant download without knowing file size";
+             throw NOFILESIZE;
+           }
+          dest_file->resize(size);
 	}
 	else {
-	  qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
-	  QThread::sleep(QT_BUG_SLEEP);
+	  qDebug() << "Following here : " << head_response->value("Location");
+	  dl_url.setUrl(head_response->value("Location"));  
 	}
-	response_string.resize(0);
-	while( head_request->readLine(buff,LINE_LEN) ) {
-	  response_string.append(buff);
-	}
-	head_response = new QHttpResponseHeader(response_string);
-	if(head_response == NULL) {
-	  throw NOMEM;
-	}
-	head_status = head_response->statusCode();
-	if( (head_status != 302) && (head_status != 200) ) {
-	  delete head_response;
-	  head_response = NULL;
-	}
-      }
-    }while( (head_status != 302) && (head_status != 200) );
-    
-    
-    if(head_response) {
-      if( (head_response->value("Location") == "") || ( head_response->value("Location") == dl_url.toString() ) ) {
-	follow = 0;
-      }
-      else {
-	qDebug() << "Following here : ";
-	qDebug() << head_response->value("Location");
-	dl_url.setUrl(head_response->value("Location"));
 	delete head_response;
 	head_response = NULL;
       }
     }
   }
-  
-  if(!head_response) {
-    qDebug() << "Head Response is NULL?!?!?";
-    throw UNKNOWN;
+  else {
+    this->size = size;
   }
-  qDebug() << "Size is : "<<head_response->value("Content-Length");
-  size = (head_response->value("Content-Length")).toInt();
-  if(size == 0) {
-    qDebug() << "Size not found. Cant download without knowing file size";
-    throw NOFILESIZE;
-  }
-  dest_file->resize(size);
-  delete head_response;
-  head_response = NULL;
   
   threads = new ThreadStatus[num_threads];
   if( threads == NULL ) {
@@ -145,12 +151,21 @@ HttpDownload::HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTi
     threads[i].abs_end =  (i+1) * (size/num_threads);
   }
   threads[i-1].abs_end = size;
-  bytes_download = 0;
-  resumable = 0;
+  
   thread_status->write((char *)threads,num_threads * sizeof(ThreadStatus));
   thread_status->flush();
+  
+  bytes_download = 0;
+  resumable = 0;
   mainThread = NULL; 
   status = PAUSED;
+  start_time=down_start;
+  end_time = down_end;
+  type = down_type;
+  num_threads = down_threads;
+  uname = down_uname;
+  passwd = down_passwd;
+  id=down_id;
 }
 /*
 HttpDownload::~HttpDownload()
