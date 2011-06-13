@@ -25,7 +25,9 @@
 #define DOWNLOAD_LEN 50
 #define BUFFSIZE 51200 // 500KB Buffer Size
 
-#define QT_BUG_SLEEP 2
+#ifndef REQUEST_PASS_SLEEP
+#define REQUEST_PASS_SLEEP 2
+#endif
 
 enum ThreadSignal {INIT,DOWNLOAD,SUSPEND,DONE,PAUSE};
 

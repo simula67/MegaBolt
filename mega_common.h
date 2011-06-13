@@ -18,7 +18,7 @@
 #ifndef MEGA_COMMON_H
 #define MEGA_COMMON_H
 
-enum DowloadStatus {DOWNLOADING,PAUSED,FIN};
+enum DowloadStatus {DOWN_ONGOING,DOWN_PAUSED,DOWN_FIN};
 
 class ThreadStatus {
 public:

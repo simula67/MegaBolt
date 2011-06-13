@@ -26,7 +26,7 @@
 
 
 class HttpMainThread : public QThread {
-	QUrl *dl_url;
+	QUrl *down_url;
 	QFile *dest_file;
 	int *size;
 	int *num_threads;

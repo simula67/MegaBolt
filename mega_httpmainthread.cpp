@@ -19,7 +19,7 @@
 
 HttpMainThread::HttpMainThread(QUrl *down_url,QFile *inp_dest_file,int *inp_size,int *inp_num_threads,int *inp_num_bytes,QFile *inp_thread_status,ThreadStatus *inp_threads,QNetworkProxy *inp_mega_proxy,int *inp_status)
 {
-dl_url = down_url;
+this->down_url = down_url;
 dest_file = inp_dest_file;
 size = inp_size;
 num_threads = inp_num_threads;
@@ -54,7 +54,7 @@ void HttpMainThread::run(){
   }
   int i,all_start;
   for(i=0;i<(*num_threads);i++) {
-    worker[i].down_url = (*dl_url);
+    worker[i].down_url = (*down_url);
     worker[i].range_start = threads[i].abs_start;
     worker[i].range_end = threads[i].abs_end;
     worker[i].mega_proxy = mega_proxy;
@@ -160,10 +160,10 @@ void HttpMainThread::run(){
       }
     }
     delete[] worker;
-    (*status) = PAUSED;
+    (*status) = DOWN_PAUSED;
   }
   if( (*bytes_download) == (*size) ) {
-      (*status) = FIN;
+      (*status) = DOWN_FIN;
   }
   pause_complete = 1;
 }

@@ -70,13 +70,13 @@ void HttpDownThread::run() {
 	else {
 	  //qDebug() << "Some bytes were not written. Error : ";
 	  //qDebug() << get_request->errorString();
-	  qDebug() << "Working around QT bug with just sleeping QT_BUG_SLEEP seconds";
-	  QThread::sleep(QT_BUG_SLEEP);
+	  qDebug() << "Waiting...";
+	  QThread::sleep(REQUEST_PASS_SLEEP);
 	}
 	/* Throw away the headers */
 	response_string->resize(0);
 	while( 1 ) {
-	  if( get_request->readLine(buffer,LINE_LEN) == 0 )
+	  if( get_request->readLine(buffer,LINE_LEN) <= 0 )
 	    break;
 	  response_string->append(buffer);
 	  //qDebug() << "Discarding line : " << (*response_string);
@@ -101,7 +101,8 @@ void HttpDownThread::run() {
       /* Download the stuff onto the buffer. use "bytes_received". */
       int received;
       received = get_request->read(buffer + bytes_received,DOWNLOAD_LEN);
-      if( received > 0 ) {
+      //qDebug() << "Received : " <<received;
+      if( received > 0 ) {       
 	bytes_received += received;
       }
       break;

@@ -27,7 +27,7 @@ int main(int argc,char *argv[])
 {
   QApplication *app=new QApplication(argc,argv);
   QUrl down_url;
-  down_url.setEncodedUrl("http://seekwell.ru/files/music/music/RAP%20%26%20RnB/Black%20Eyed%20Paes/Black%20Eyed%20Peas%20-%20Bebot.mp3");
+  down_url.setEncodedUrl("http://localhost/a.abc");
   QFileInfo down_file("/home/simula67/Repos/MegaBolt/down_file");
   QDateTime down_start = QDateTime::currentDateTime();
   QDateTime down_end = QDateTime::currentDateTime();
@@ -36,16 +36,9 @@ int main(int argc,char *argv[])
   QFileInfo down_timing("/home/simula67/Repos/MegaBolt/timing_file");
   QUrl down_proxy("");
   try { 
-    HttpDownload xilinx(down_url,1,down_file,down_start,down_end,down_type,4,down_proxy,"","",down_threads,down_timing);
-
+    HttpDownload xilinx(down_url,1,down_file,down_start,down_end,down_type,2,down_proxy,"","",down_threads,down_timing);
     xilinx.getHttp();
-    sleep(4);
-    qDebug() << "Pause from test.cpp";
-    xilinx.pause();
-    sleep(5);
-    qDebug() << "Resuming";
-    xilinx.getHttp();
-    while( xilinx.status != FIN ) {
+    while( xilinx.status != DOWN_FIN ) {
     	sleep(1);
     }
   }

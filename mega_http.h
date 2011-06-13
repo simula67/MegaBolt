@@ -37,13 +37,14 @@
 #define UNKNOWN -2
 #define NOFILESIZE -3
 #define NOMEM -4
+#define ECONNECT -5
 
 #ifndef LINE_LEN
 #define LINE_LEN 1024
 #endif
 
-#ifndef QT_BUG_SLEEP
-#define QT_BUG_SLEEP 2
+#ifndef REQUEST_PASS_SLEEP
+#define REQUEST_PASS_SLEEP 2
 #endif
 
 
@@ -54,7 +55,7 @@ private:
   QNetworkProxy *mega_proxy;
   HttpMainThread *mainThread;
  public:
-  QUrl dl_url;
+  QUrl down_url;
   int id;
   QFile *dest_file;
   QDateTime start_time;
@@ -71,9 +72,12 @@ private:
 
   ThreadStatus *threads;
   QFile *timing_info;
-  HttpDownload(QUrl down_url,int down_id,QFileInfo down_file,QDateTime down_start,QDateTime down_end,QString down_type,int down_threads,QUrl down_proxy,QString down_uname, QString down_passwd,QFileInfo down_threadfile,QFileInfo down_timing,int size = 0);
+  HttpDownload(QUrl down_url,int id,QFileInfo dest_file,QDateTime start_time,
+	       QDateTime end_time,QString type,int num_threads,
+	       QUrl mega_proxy,QString uname, QString passwd, 
+	       QFileInfo thread_status,QFileInfo timing_info,int size = 0);
  void getHttp();
- //~HttpDownload();
+ ~HttpDownload();
  void pause();
 protected:
   QHttpResponseHeader *head_response;
